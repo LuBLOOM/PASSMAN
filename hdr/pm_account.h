@@ -1,34 +1,19 @@
-#ifndef PM_ACCOUNT_H
-#define PM_ACCOUNT_H
+#ifndef PM_ACCOUNT_H_
+#define PM_ACCOUNT_H_
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
+#include <sys/mman.h>
 
-struct pm_account {
-	char *url;
-	char *name;
-	char *pass;
-	struct pm_account *next;
-};
+#define INFOFILE ".accounts"
+#define PAGEWIDTH 5
 
-struct pm_list {
-	struct pm_account *head;
-	void (* enc)(void);
-	void (* dec)(void);
-};
+int pm_init(void);
+int pm_add(char *username, char *password);
+int pm_delete(char *username);
+int pm_search(char *username);
+int pm_showall(void);
 
-struct pm_list *accounts;
-FILE *filp;
-
-void pm_list_init(void (*)(void), void (*)(void));
-void pm_list_insert(struct pm_account *);
-void pm_list_get(char *, char*);
-void pm_list_show(void);
-void pm_list_free(void);
-
-struct pm_account *pm_account_get(char *);
-struct pm_account *pm_account_init(char *, char *, char *);
-
-
-#endif /* PM_ACCOUNT_H */
+#endif /* PM_ACCOUNT_H_ */

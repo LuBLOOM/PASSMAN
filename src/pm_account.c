@@ -1,78 +1,97 @@
 #include "../hdr/pm_account.h"
-#include "../hdr/pm_utils.h"
 
-void pm_list_init(void (* enc)(void), void (* dec)(void))
+int pm_init(void)
 {
-	accounts = (struct pm_list *)malloc(sizeof *accounts);
-	accounts->head = NULL;
-	accounts->enc = enc;
-	accounts->dec = dec;
-}
-
-void pm_list_insert(struct pm_account *acc)
-{
-	if (NULL == accounts->head) {
-		accounts->head = acc;
-	} else {
-		struct pm_account *tmp = accounts->head;
-		while (NULL != tmp->next)
-			tmp = tmp->next;
-		tmp->next = acc;
+	FILE *fp = fopen(INFOFILE, "r");
+	if (!fp) {
+		fp = fopen(INFOFILE, "w");
+		fclose(fp);
+		return -1;
 	}
-	printf("%s->%s->%s\n", acc->url, acc->name, acc->pass);
+	fclose(fp);
+	return 0;
 }
 
-void pm_list_get(char *url, char *name)
+int pm_add(char *username, char *password)
 {
-	struct pm_account *tmp = accounts->head;
-	while (NULL != tmp) {
-		if (0 == strcmp(tmp->name, name)
-		    && 0 == strcmp(tmp->url, url)) {
-			printf("account password: %s\n", tmp->pass);
-			return;
+	FILE *fp = fopen(INFOFILE, "a");
+	int status = 0;
+	if (username && password) {
+		ssize_t u_len = strlen(username);
+		ssize_t p_len = strlen(password);
+		ssize_t buffer_len = u_len + p_len + 2;
+		char *buffer = calloc(sizeof *buffer, buffer_len);
+		sprintf(buffer, "%s:%s\n", username, password);
+		fwrite(buffer, buffer_len, sizeof *buffer, fp);
+		free(buffer);
+	} else  {
+		status = -1;
+	}
+	fclose(fp);
+	return status;
+}
+
+int pm_delete(char *username)
+{
+	FILE *fp = fopen(INFOFILE, "r");
+	FILE *fp_new = fopen(".tmp", "w");
+	int status = 0;
+	if (username) {
+		ssize_t size = 1000;
+		char *buffer = malloc(size);
+		while (getline(&buffer, &size, fp) != -1) {
+			int length = strlen(username);
+			int curr_length = strlen(buffer);
+			if (curr_length < length) length = curr_length;
+			int i;
+			for (i = 0; i < length && *(buffer+i)-*(username+i) == 0; i++)
+				;
+			if (i != length) {
+				fwrite(buffer, size, sizeof *buffer, fp_new);
+			}
 		}
-		tmp = tmp->next;
 	}
-	printf("could not find an account\n"
-	       "use 'show' to display currently archived accounts\n");
+	fclose(fp);
+	fclose(fp_new);
+	remove(INFOFILE);
+	rename(".tmp", INFOFILE);
+	return status;
 }
 
-void pm_list_show(void)
+int pm_search(char *username)
 {
-	struct pm_account *tmp = accounts->head;
-	while (NULL != tmp) {
-		printf("=== ACCOUNT START ===\n");
-		printf("URL: %s\n", tmp->url);
-		printf("NAME: %s\n", tmp->name);
-		printf("=== ACCOUNT END   ===\n\n");
-		tmp = tmp->next;
+	FILE *fp = fopen(INFOFILE, "r");
+	int status = -1;
+	if (username) {
+		ssize_t size = 1000;
+		char *buffer = malloc(size);
+		while (getline(&buffer, &size, fp) != -1) {
+			int length = strlen(username);
+			int curr_length = strlen(buffer);
+			if (curr_length < length) length = curr_length;
+			int i;
+			for (i = 0; i < length && *(buffer+i)-*(username+i) == 0; i++)
+				;
+			if (i == length) {
+				fprintf(stdout, "Password: %s", buffer + length+1);
+				status = 0;
+				break;
+			}
+		}
 	}
+	fclose(fp);
+	return status;
 }
 
-void pm_list_free(void)
+int pm_showall(void)
 {
-	struct pm_account *tmp = accounts->head;
-	while (NULL != tmp) {
-		struct pm_account *curr = tmp;
-		tmp = tmp->next;
-		free(curr->name);
-		free(curr->url);
-		free(curr->pass);
-		free(curr);
+	FILE *fp = fopen(INFOFILE, "r");
+	int status = 0;
+	ssize_t size = 1000;
+	char *buffer = malloc(size);
+	while (getline(&buffer, &size, fp) != -1) {
+		fprintf(stdout, "%s", buffer);
 	}
-	accounts->enc = NULL;
-	accounts->dec = NULL;
-	free(accounts);
-}
-
-struct pm_account *pm_account_init(char *url, char *name, char *pass)
-{
-	struct pm_account *tmp =  (struct pm_account *)malloc(sizeof *tmp);
-        tmp->url = (char *)malloc(BUFSIZE * sizeof *tmp->url);
-	tmp->name = (char *)malloc(BUFSIZE * sizeof *tmp->name);
-	tmp->pass = (char *)malloc(BUFSIZE * sizeof *tmp->pass);
-	memcpy(tmp->url, url, 1000);
-	memcpy(tmp->name, name, 1000);
-	memcpy(tmp->pass, pass, 1000);
-	return tmp;
+	fclose(fp);
+	return status;
 }

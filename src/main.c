@@ -1,11 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../hdr/pm_account.h"
+#include "../hdr/pm_aes.h"
 
-#include "../hdr/pm_cli.h"
-
-int main(int argc, char **argv)
+int main(void)
 {
-	pm_cli_prompt();
+	
 	return 0;
 }
