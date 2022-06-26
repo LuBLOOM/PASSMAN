@@ -13,6 +13,8 @@ int passman_prompt(void);
 int passman_free(void);
 
 void trim(char **);
+char *strdelim(char *, const char *);
+char *strdelim_l(char *, const char *, char **);
 
 int main(void)
 {
@@ -60,11 +62,25 @@ int passman_prompt(void)
 			*/
 			fprintf(stdout, "%s\n", help_msg);
 		} else if (!strncmp("add", input, 3)) {
+			char *username = calloc(500, sizeof *username);
+			char *password = calloc(500, sizeof *password);
+
+			char delim = ' ';
+			char *tok = strdelim(input, &delim);
+			tok = strdelim(NULL, &delim);
+			memcpy(username, tok, strlen(tok));
+			tok = strdelim(NULL, &delim);
+			memcpy(password, tok, strlen(tok));
+
+			fprintf(stdout, "%s\n", username);
+			fprintf(stdout, "%s\n", password);
 			
+			free(username);
+			free(password);
 		} else if (!strncmp("search", input, 6)) {
-			fprintf(stdout, "search'ing for the username\n");
+			fprintf(stdout, "%s\n", input);
 		} else if (!strncmp("delete", input, 6)) {
-			fprintf(stdout, "delete'ing the username and password\n");
+			fprintf(stdout, "%s\n", input);
 		} else {
 			fprintf(stdout, "Invalid command. Try passman> 'help'\n");
 		}
@@ -77,20 +93,38 @@ int passman_free(void)
 	return 0;
 }
 
-void trim(char **s)
+void trim(char **s, const char delim)
 {
 	char *ref = *s;
 	int first = -1, last = -1;
+
 	for (int i = 0, c = 0; (c = *(ref+i)) != '\0'; i++) {
 		if (first < 0 && c != ' ') {
 			first = i;
 		}
 		if (c != ' ') last = i;
 	}
+
+	
 	last += 1;
 	int i;
+
+	
 	for (i = first; i < last; i++) {
 		*(ref+i-first) = *(ref+i);
 	}
+
+	
 	*(ref+i-first) = '\0';
+}
+
+char *strdelim(char *s, const char *delim)
+{
+	static char *last;
+	return strdelim_l(s, delim, &last);
+}
+
+char *strdelim_l(char *s, const char *delim, char **last)
+{
+	
 }
