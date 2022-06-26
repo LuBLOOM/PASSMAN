@@ -12,9 +12,9 @@ int passman_init(void);
 int passman_prompt(void);
 int passman_free(void);
 
-void trim(char **);
-char *strdelim(char *, const char *);
-char *strdelim_l(char *, const char *, char **);
+void trim(char **, char);
+char *strdelim(char *, const char );
+char *strdelim_l(char *, const char , char **);
 
 int main(void)
 {
@@ -45,7 +45,7 @@ int passman_prompt(void)
 			*(input+i) = c;
 		}
 		*(input+i) = '\0';
-		trim(&input);
+		trim(&input, ' ');
 		if (!strncmp("quit", input, 4)) {
 			quit = 1;
 		} else if (!strncmp("help", input, 4)) {
@@ -64,23 +64,44 @@ int passman_prompt(void)
 		} else if (!strncmp("add", input, 3)) {
 			char *username = calloc(500, sizeof *username);
 			char *password = calloc(500, sizeof *password);
-
 			char delim = ' ';
-			char *tok = strdelim(input, &delim);
-			tok = strdelim(NULL, &delim);
-			memcpy(username, tok, strlen(tok));
-			tok = strdelim(NULL, &delim);
-			memcpy(password, tok, strlen(tok));
+			
+			char *s = strdelim(input, delim);
+			
+			s = strdelim(NULL, delim);
+			memcpy(username, s, strlen(s));
+			
+			s = strdelim(NULL, delim);
+			memcpy(password, s, strlen(s));
 
-			fprintf(stdout, "%s\n", username);
-			fprintf(stdout, "%s\n", password);
+			pm_add(username, password);
 			
 			free(username);
 			free(password);
 		} else if (!strncmp("search", input, 6)) {
-			fprintf(stdout, "%s\n", input);
+			char *username = calloc(500, sizeof *username);
+			char delim = ' ';
+
+			char *s = strdelim(input, delim);
+
+			s = strdelim(NULL, delim);
+			memcpy(username, s, strlen(s));
+
+			pm_search(username);
+			
+			free(username);
 		} else if (!strncmp("delete", input, 6)) {
-			fprintf(stdout, "%s\n", input);
+			char *username = calloc(500, sizeof *username);
+			char delim = ' ';
+
+			char *s = strdelim(input, delim);
+
+			s = strdelim(NULL, delim);
+			memcpy(username, s, strlen(s));
+
+			pm_delete(username);
+
+			free(username);
 		} else {
 			fprintf(stdout, "Invalid command. Try passman> 'help'\n");
 		}
@@ -90,6 +111,7 @@ int passman_prompt(void)
 int passman_free(void)
 {
 	free(input);
+	
 	return 0;
 }
 
@@ -99,17 +121,16 @@ void trim(char **s, const char delim)
 	int first = -1, last = -1;
 
 	for (int i = 0, c = 0; (c = *(ref+i)) != '\0'; i++) {
-		if (first < 0 && c != ' ') {
+		if (first < 0 && c != delim) {
 			first = i;
 		}
-		if (c != ' ') last = i;
+		if (c != delim) last = i;
 	}
 
 	
 	last += 1;
-	int i;
-
 	
+	int i;	
 	for (i = first; i < last; i++) {
 		*(ref+i-first) = *(ref+i);
 	}
@@ -118,13 +139,43 @@ void trim(char **s, const char delim)
 	*(ref+i-first) = '\0';
 }
 
-char *strdelim(char *s, const char *delim)
+/* similar to strtok and strtok_r in 'string.h' but implemented slightly differently */
+char *strdelim(char *s, const char delim)
 {
-	static char *last;
-	return strdelim_l(s, delim, &last);
+	static char *prev;
+	
+	return strdelim_l(s, delim, &prev);
 }
 
-char *strdelim_l(char *s, const char *delim, char **last)
-{
-	
+char *strdelim_l(char *s, const char delim, char **prev)
+'{
+	int c;
+	char *new_s;
+
+	if (s == NULL && (s = *prev) == NULL) 
+		return NULL;
+
+	/* remove trailing whitespace */
+	for (c = *s; c == delim; c = *s++)
+		;
+
+	/* string might only contains delims */
+	if (c == 0) {
+		*prev = NULL;
+		return NULL;
+	}
+	new_s = s;
+
+	/* loop to find the end of the current sub string */
+	for (;;) {
+		c = *s++;
+		if (c == delim) {
+			if (c == 0)
+				s = NULL;
+			else
+				s[-1] = 0;
+			*prev = s;
+			return new_s;
+		}
+	}
 }
