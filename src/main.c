@@ -102,6 +102,8 @@ int passman_prompt(void)
 			pm_delete(username);
 
 			free(username);
+		} else if (!strncmp("showall", input, 7)) {
+			pm_showall();
 		} else {
 			fprintf(stdout, "Invalid command. Try passman> 'help'\n");
 		}
@@ -148,7 +150,7 @@ char *strdelim(char *s, const char delim)
 }
 
 char *strdelim_l(char *s, const char delim, char **prev)
-'{
+{
 	int c;
 	char *new_s;
 

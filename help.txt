@@ -6,4 +6,5 @@ COMMAND:
 	search <username> - find the corresponding password in the database for the <username>
 	delete <username> - removes every occurance of the username in the database 
 	add <username> <password> - inserts the username and password into the database
+	showall - show all the usernames and passwords saved in the database
 
