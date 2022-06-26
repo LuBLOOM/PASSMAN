@@ -15,6 +15,7 @@ $(EXEC) : $(OBJ)
 
 clean:
 	@rm -rf $(EXEC) obj/*.o
+	@echo "Cleaned directory!"
 
 update:
 	@perl help_gen.pl
