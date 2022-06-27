@@ -7,14 +7,14 @@ EXEC = bin/passman
 all: update $(EXEC)
 
 $(OBJ) : obj/%.o : src/%.c
-	@$(CC) $(DEBUG) -c $? -o $@
+	$(CC) $(DEBUG) -c $? -o $@
 
 $(EXEC) : $(OBJ)
-	@$(CC) -o $@ $?
+	$(CC) -o $@ $?
 	@echo "Finished compilation!"
 
 clean:
-	@rm -rf $(EXEC) obj/*.o
+	rm -rf $(EXEC) obj/*.o
 	@echo "Cleaned directory!"
 
 update:
