@@ -16,14 +16,17 @@ void trim(char **, char);
 char *strdelim(char *, const char );
 char *strdelim_l(char *, const char , char **);
 
+void printHex(char);
+
 int main(void)
 {
 	if (passman_init() != 0) {
 		fprintf(stderr, "passman> Could not start, there was an error\n");
 	}
-	//passman_prompt();
-	pm_aes_init();
+	
+	passman_prompt();
 	passman_free();
+	
 	return 0;
 }
 
